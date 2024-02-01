@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            background-color: #f0f0f0;
+        }
+
+        #health {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: red;
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="health">Health: 5</div>
+    <div id="score">Score: 0</div>
+    <canvas id="myCanvas"></canvas>
+
+
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var ctx = canvas.getContext('2d');
+
+        var health = 5; // Initialize health points
+        document.getElementById('health').innerText = 'Health: ' + health;
+        document.getElementById('score').innerText = 'Score: 0'; // Initialize score display
+
+
+        var x = canvas.width / 2 - 50; // Center the car on the screen horizontally
+        var y = canvas.height - 60; // Position the car towards the bottom of the canvas
+        var width = 100; // Width of the car
+        var height = 30; // Height of the car
+        var speed = 12; // Speed of the car
+
+        var shapes = []; // Array to hold the shapes
+        var score = 0;
+        var coins = []; // Array to hold the coins
+
+        class Coin {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 10; // Example size
+                this.speed = speed;
+            }
+            update() {
+                this.y += this.speed;
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = 'yellow';
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        class Shape {
+            constructor(x, y, speed) {
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw(ctx) {
+                // Subclasses will define how to draw different shapes
+            }
+        }
+
+        class Rectangle extends Shape {
+            constructor(x, y, width, height, speed) {
+                super(x, y, speed);
+                this.width = width;
+                this.height = height;
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        const createShape = () => {
+            var x = Math.random() * canvas.width;
+            var speed = 2 + Math.random() * 3; // Random speed
+            var width = 20 + Math.random() * 30; // Random width
+            var height = 20 + Math.random() * 30; // Random height
+            shapes.push(new Rectangle(x, -height, width, height, speed));
+        }
+
+        const checkCollision = (shape) => {
+            if (x < shape.x + shape.width && x + width > shape.x && y < shape.y + shape.height && y + height > shape.y) {
+                return true;
+            }
+            return false;
+        }
+
+        const checkCollisionWithCoin = (coin) => {
+            if (Math.abs(x + width / 2 - coin.x) < width / 2 + coin.radius &&
+                Math.abs(y + height / 2 - coin.y) < height / 2 + coin.radius) {
+                return true;
+            }
+            return false;
+        }
+
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Car drawing logic
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+            ctx.fillStyle = 'blue'; // Car color
+            // Draw the car body
+            ctx.fillRect(x, y, width, height);
+            // Draw the wheels
+            ctx.fillStyle = 'black'; // Wheel color
+            ctx.fillRect(x + 5, y + height, 10, 5); // Left wheel
+            ctx.fillRect(x + width - 15, y + height, 10, 5); // Right wheel
+
+            coins.forEach(function (coin, index) {
+                coin.draw(ctx);
+                // Simple collision check between car and coin
+                if (Math.abs(x + width / 2 - coin.x) < width / 2 + coin.radius &&
+                    Math.abs(y + height / 2 - coin.y) < height / 2 + coin.radius) {
+                    score += 1; // Increment score
+                    document.getElementById('score').innerText = 'Score: ' + score; // Update score display
+                    coins.splice(index, 1); // Remove the coin
+                }
+                if (checkCollisionWithCoin(coin)) {
+                    score += 1; // Increment score by one
+                    document.getElementById('score').innerText = 'Score: ' + score; // Update the score display
+                    // Remove the coin from the array or handle it as needed
+                }
+            })
+
+            shapes.forEach(function (shape, index) {
+                shape.update();
+                shape.draw(ctx);
+                if (checkCollision(shape)) {
+                    health -= 1;
+                    document.getElementById('health').innerText = 'Health: ' + health;
+                    shapes.splice(index, 1);
+                    if (health <= 0) {
+                        alert("Game Over!");
+                        // Optionally, stop the game or reset
+                    }
+                }
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('keydown', function (e) {
+            switch (e.key) {
+                case 'a': // Left
+                    x -= speed;
+                    break;
+                case 'd': // Right
+                    x += speed;
+                    break;
+            }
+            x = Math.max(0, Math.min(x, canvas.width - width));
+        })
+
+
+        function createCoin() {
+            var x = Math.random() * canvas.width;
+            var y = -10; // Start off-screen
+            var speed = 12; // Define a speed for the coin
+            coins.push(new Coin(x, y, speed));
+        }
+        setInterval(createCoin, 5000); // Adjust timing as needed
+
+        setInterval(() => {
+            coins.forEach(function (coin, index) {
+                coin.update();
+            });
+        }, 1000); // Update coin position every second
+
+        setInterval(createShape, 1000); // Create a new shape every second
+        draw(); // Start the animation
+    </script>
+</body>
+
+</html>
