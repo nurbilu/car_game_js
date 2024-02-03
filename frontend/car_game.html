@@ -18,9 +18,25 @@
         #health {
             position: fixed;
             top: 20px;
-            left: 20px;
+            right: 20px;
             color: red;
             font-size: 24px;
+        }
+
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: blue;
+            font-size: 24px;
+        }
+
+        #restartButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: none; /* Hide the restart button by default */
         }
     </style>
 </head>
@@ -28,9 +44,10 @@
 <body>
 
     <div id="health">Health: 5</div>
-    <div id="score">Score: 0</div>
+    <div id="score">Score: 0</div><br>
+    <div><button id="restartButton">Restart</button></div>
     <canvas id="myCanvas"></canvas>
-
+    
 
     <script>
         var canvas = document.getElementById('myCanvas');
@@ -161,8 +178,11 @@
                     document.getElementById('health').innerText = 'Health: ' + health;
                     shapes.splice(index, 1);
                     if (health <= 0) {
-                        alert("Game Over!");
-                        // Optionally, stop the game or reset
+                        alert("Game Over! Congestions player!");
+                        document.getElementById('restartButton').style.display = 'block'; // Show restart button
+                        document.getElementById('health').style.display = 'none'; // Hide health display
+                        document.getElementById('score').style.display = 'none'; // Hide score display
+                        canvas.style.display = 'none'; // Hide canvas
                     }
                 }
             });
@@ -182,20 +202,37 @@
             x = Math.max(0, Math.min(x, canvas.width - width));
         })
 
+        const restartGame = () => {
+            health = 5; 
+            score = 0;
+            shapes = []; 
+            coins = []; 
+            x = canvas.width / 2 - 50; 
+            y = canvas.height - 60;
+            document.getElementById('health').innerText = 'Health: ' + health; 
+            document.getElementById('score').innerText = 'Score: ' + score; 
+            document.getElementById('restartButton').style.display = 'none'; // Hide restart button
+            document.getElementById('health').style.display = 'block'; // Show health display
+            document.getElementById('score').style.display = 'block'; // Show score display
+            canvas.style.display = 'block'; // Show canvas
+            draw(); // Start the animation
+        }
 
-        function createCoin() {
+        document.getElementById('restartButton').addEventListener('click', restartGame);
+
+        const createCoin = () => {
             var x = Math.random() * canvas.width;
-            var y = -10; // Start off-screen
-            var speed = 12; // Define a speed for the coin
+            var y = 0; // Start off-screen
+            var speed = 20; // Increase the speed for faster coins
             coins.push(new Coin(x, y, speed));
         }
-        setInterval(createCoin, 5000); // Adjust timing as needed
+        setInterval(createCoin, 4000); // Adjust timing as needed
 
         setInterval(() => {
             coins.forEach(function (coin, index) {
                 coin.update();
             });
-        }, 1000); // Update coin position every second
+        }, 200); // Update coin position every 1.5 seconds
 
         setInterval(createShape, 1000); // Create a new shape every second
         draw(); // Start the animation
